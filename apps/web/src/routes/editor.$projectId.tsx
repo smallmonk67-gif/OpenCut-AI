@@ -1,5 +1,16 @@
 import { createFileRoute, useParams, Link } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+
+// Types for File Assets
+export type AssetNode = {
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  file?: File;
+  children?: AssetNode[];
+  isOpen?: boolean; // UI state for directory
+};
+
 
 // Note: opencut-wasm loading will be available after WASM compilation.
 // We'll import it dynamically or assume it's loaded to prevent breakages if not compiled yet.
@@ -13,6 +24,11 @@ function Home() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
+
+  const [assets, setAssets] = useState<AssetNode[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     // Dynamic import to avoid SSR issues or pre-compilation errors
@@ -55,6 +71,233 @@ function Home() {
     animationFrame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(animationFrame);
   }, [isPlaying]);
+
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const traverseFileTree = async (item: any, path: string = ''): Promise<AssetNode | null> => {
+    return new Promise((resolve) => {
+      if (item.isFile) {
+        item.file((file: File) => {
+          resolve({
+            name: file.name,
+            path: path + file.name,
+            type: 'file',
+            file: file
+          });
+        });
+      } else if (item.isDirectory) {
+        const dirReader = item.createReader();
+        const childrenNodes: AssetNode[] = [];
+
+        const readAllEntries = () => {
+          dirReader.readEntries(async (entries: any[]) => {
+            if (entries.length === 0) {
+              // Sort folders first, then alphabetically
+              childrenNodes.sort((a, b) => {
+                if (a.type === b.type) return a.name.localeCompare(b.name);
+                return a.type === 'directory' ? -1 : 1;
+              });
+
+              resolve({
+                name: item.name,
+                path: path + item.name,
+                type: 'directory',
+                children: childrenNodes,
+                isOpen: true
+              });
+              return;
+            }
+
+            for (let i = 0; i < entries.length; i++) {
+              const childNode = await traverseFileTree(entries[i], path + item.name + '/');
+              if (childNode) {
+                childrenNodes.push(childNode);
+              }
+            }
+
+            readAllEntries(); // Read next batch
+          });
+        };
+        readAllEntries();
+      } else {
+        resolve(null);
+      }
+    });
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const items = e.dataTransfer.items;
+    if (!items) return;
+
+
+    const incomingNodes: AssetNode[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i].webkitGetAsEntry();
+      if (item) {
+        const node = await traverseFileTree(item);
+        if (node) {
+          incomingNodes.push(node);
+        }
+      }
+    }
+
+    const mergedAssets = mergeNodes(assets, incomingNodes);
+    setAssets(mergedAssets);
+  };
+
+
+  const mergeNodes = (existing: AssetNode[], incoming: AssetNode[]): AssetNode[] => {
+    const result = [...existing];
+
+    incoming.forEach(node => {
+      const existingNodeIndex = result.findIndex(n => n.name === node.name && n.type === node.type);
+
+      if (existingNodeIndex >= 0) {
+        if (node.type === 'directory') {
+          // Merge children recursively
+          result[existingNodeIndex] = {
+            ...result[existingNodeIndex],
+            children: mergeNodes(result[existingNodeIndex].children || [], node.children || [])
+          };
+        } else {
+          // Overwrite file or keep existing? Let's overwrite for now
+          result[existingNodeIndex] = node;
+        }
+      } else {
+        result.push(node);
+      }
+    });
+
+    result.sort((a, b) => {
+      if (a.type === b.type) return a.name.localeCompare(b.name);
+      return a.type === 'directory' ? -1 : 1;
+    });
+
+    return result;
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const buildTree = (files: File[]) => {
+      const root: AssetNode[] = [];
+
+      files.forEach(file => {
+        const path = file.webkitRelativePath || file.name;
+        const parts = path.split('/');
+
+        let currentLevel = root;
+        let currentPath = '';
+
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          currentPath += (currentPath ? '/' : '') + part;
+
+          const isFile = i === parts.length - 1;
+
+          let existingNode = currentLevel.find(n => n.name === part && n.type === (isFile ? 'file' : 'directory'));
+
+          if (!existingNode) {
+            existingNode = {
+              name: part,
+              path: currentPath,
+              type: isFile ? 'file' : 'directory',
+              ...(isFile ? { file } : { children: [], isOpen: true })
+            };
+            currentLevel.push(existingNode);
+          }
+
+          if (!isFile) {
+            if (!existingNode.children) existingNode.children = [];
+            currentLevel = existingNode.children;
+          }
+        }
+      });
+
+      return root;
+    };
+
+    const addedAssets = buildTree(Array.from(files));
+    const mergedAssets = mergeNodes(assets, addedAssets);
+
+    setAssets(mergedAssets);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (folderInputRef.current) {
+      folderInputRef.current.value = '';
+    }
+  };
+
+
+  const toggleFolder = (path: string, nodes: AssetNode[]): AssetNode[] => {
+    return nodes.map(node => {
+      if (node.path === path) {
+        return { ...node, isOpen: !node.isOpen };
+      }
+      if (node.children) {
+        return { ...node, children: toggleFolder(path, node.children) };
+      }
+      return node;
+    });
+  };
+
+  const renderAssetNode = (node: AssetNode, depth: number = 0) => {
+    if (node.type === 'directory') {
+      return (
+        <div key={node.path} className="w-full">
+          <div
+            className="flex items-center py-1 px-2 hover:bg-white/5 rounded-md cursor-pointer transition-colors"
+            style={{ paddingLeft: `${(depth * 12) + 8}px` }}
+            onClick={() => setAssets(toggleFolder(node.path, assets))}
+          >
+            <svg
+              width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              className={`mr-2 text-neutral-400 transition-transform ${node.isOpen ? 'rotate-90' : ''}`}
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2 text-blue-400">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span className="text-xs text-neutral-300 truncate">{node.name}</span>
+          </div>
+          {node.isOpen && node.children && (
+            <div className="flex flex-col w-full">
+              {node.children.map(child => renderAssetNode(child, depth + 1))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div
+        key={node.path}
+        className="flex items-center py-1 px-2 hover:bg-white/5 rounded-md cursor-pointer transition-colors group"
+        style={{ paddingLeft: `${(depth * 12) + 24}px` }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2 text-neutral-500 group-hover:text-purple-400">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span className="text-xs text-neutral-300 truncate">{node.name}</span>
+      </div>
+    );
+  };
 
   const handleAddClip = (trackId: string) => {
     if (!wasmProj) return;
@@ -124,6 +367,49 @@ function Home() {
               </button>
             ))}
           </div>
+          <div
+            className="flex-1 p-4 overflow-y-auto"
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
+            <div className="flex flex-col gap-0.5">
+              {assets.length === 0 ? (
+                <div className="text-xs text-neutral-600 text-center py-4">No media imported yet.</div>
+              ) : (
+                assets.map(node => renderAssetNode(node))
+              )}
+            </div>
+            <input
+              type="file"
+              multiple
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileInput}
+            />
+            <input
+              type="file"
+              multiple
+              // @ts-ignore
+              webkitdirectory="true"
+              directory="true"
+              ref={folderInputRef}
+              className="hidden"
+              onChange={handleFileInput}
+            />
+            <div className="flex gap-2 w-full mt-4">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
+              >
+                + Import Files
+              </button>
+              <button
+                onClick={() => folderInputRef.current?.click()}
+                className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
+              >
+                + Import Folder
+              </button>
 
           {/* Active Panel Area */}
           <div className="flex-1 flex flex-col">
