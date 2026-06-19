@@ -314,9 +314,9 @@ function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-neutral-950 text-white overflow-hidden font-sans selection:bg-purple-500/30">
+    <div className="flex flex-col h-screen bg-[#141414] text-[#E4E4E4] overflow-hidden font-sans selection:bg-blue-500/30 text-sm">
       {/* Header */}
-      <header className="h-14 border-b border-white/10 bg-black/40 backdrop-blur-md flex items-center justify-between px-6 z-20">
+      <header className="h-12 border-b border-[#252525] bg-[#1a1a1a] flex items-center justify-between px-4 z-20 shadow-sm">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
             <Link to="/" className="text-neutral-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors mr-2 flex items-center gap-1 text-xs font-medium">
@@ -346,13 +346,24 @@ function Home() {
       </header>
 
       {/* Main Workspace */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden bg-[#000000]">
         {/* Left Sidebar */}
-        <aside className="w-72 border-r border-white/10 bg-neutral-900/50 flex flex-col z-10 backdrop-blur-sm">
-          <div className="flex p-2 gap-1 border-b border-white/5">
-            {['Media', 'Text', 'Effects', 'Scripting'].map((tab, i) => (
-              <button key={tab} className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${i === 0 ? 'bg-white/10 text-white' : 'text-neutral-400 hover:bg-white/5'}`}>
-                {tab}
+        <aside className="w-[400px] border-r border-[#252525] bg-[#181818] flex z-10">
+          {/* Vertical Tabs */}
+          <div className="w-[72px] border-r border-[#252525] flex flex-col items-center py-2 gap-2 bg-[#141414]">
+            {[
+              { icon: 'M', label: 'Media' },
+              { icon: 'A', label: 'Audio' },
+              { icon: 'T', label: 'Text' },
+              { icon: 'S', label: 'Stickers' },
+              { icon: 'E', label: 'Effects' },
+              { icon: 'T', label: 'Transitions' },
+              { icon: 'F', label: 'Filters' },
+              { icon: 'A', label: 'Adjustment' },
+            ].map((tab, i) => (
+              <button key={tab.label} className={`flex flex-col items-center justify-center w-14 h-14 rounded-md transition-colors ${i === 0 ? 'text-white bg-[#252525]' : 'text-[#888] hover:text-white hover:bg-[#252525]'}`}>
+                <span className="text-lg mb-1 font-bold">{tab.icon}</span>
+                <span className="text-[10px]">{tab.label}</span>
               </button>
             ))}
           </div>
@@ -399,70 +410,122 @@ function Home() {
               >
                 + Import Folder
               </button>
+
+          {/* Active Panel Area */}
+          <div className="flex-1 flex flex-col">
+            <div className="p-4 border-b border-[#252525]">
+              <div className="flex gap-4">
+                <button className="text-white font-medium text-sm pb-2 border-b-2 border-blue-500">Local</button>
+                <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
+              </div>
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto">
+              <button className="w-full bg-[#2A2A2A] hover:bg-[#333] border border-[#3A3A3A] text-white text-sm py-2 rounded mb-4 transition-colors">
+                Import
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="aspect-video bg-[#222] rounded border border-[#333] hover:border-[#666] transition-colors cursor-pointer group relative overflow-hidden flex items-center justify-center">
+                    <span className="text-[#555] text-xs">Video {i}</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <span className="absolute bottom-1 left-2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">Clip {i}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </aside>
 
         {/* Center Canvas / Player */}
-        <main className="flex-1 flex flex-col bg-black relative">
+        <main className="flex-1 flex flex-col bg-[#000000] relative">
           {/* Player area */}
-          <div className="flex-1 flex items-center justify-center p-8 relative overflow-hidden">
-             {/* Decorative background grid */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-            
-            <div className="w-full max-w-4xl aspect-video bg-neutral-950 rounded-xl border border-white/10 shadow-2xl overflow-hidden relative z-10 ring-1 ring-white/5 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center p-4 relative overflow-hidden bg-[#111]">
+            <div className="w-full max-w-4xl aspect-video bg-black rounded shadow-2xl overflow-hidden relative z-10 flex items-center justify-center border border-[#252525]">
                {/* Synthesized placeholder for video player */}
-               <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-purple-900/20 to-black"></div>
-               <p className="text-neutral-500 text-sm font-mono z-10">Canvas Player</p>
+               <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] to-black"></div>
+               <p className="text-[#555] text-sm font-mono z-10">Player</p>
             </div>
           </div>
 
           {/* Player Controls */}
-          <div className="h-16 border-t border-white/10 bg-neutral-950/80 backdrop-blur-md flex items-center px-6 gap-4">
-            <div className="flex items-center gap-2">
-              <button className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+          <div className="h-12 border-t border-[#252525] bg-[#181818] flex items-center justify-between px-4 z-20">
+            <div className="text-xs font-mono text-[#888] w-32">
+              <span className="text-white">{formatTime(currentTime)}</span> / 00:01:00:00
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button className="text-[#888] hover:text-white transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11 5L4 12L11 19V5Z"/><path d="M20 5L13 12L20 19V5Z"/></svg>
               </button>
               <button 
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="w-10 h-10 rounded-full bg-white text-black hover:bg-neutral-200 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-[#252525] hover:bg-[#333] text-white flex items-center justify-center transition-colors"
               >
                 {isPlaying ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 )}
               </button>
-              <button className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+              <button className="text-[#888] hover:text-white transition-colors">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 5L20 12L13 19V5Z"/><path d="M4 5L11 12L4 19V5Z"/></svg>
               </button>
             </div>
-            <div className="text-sm font-mono text-neutral-400">
-              {formatTime(currentTime)} / 00:01:00:00
+
+            <div className="w-32 flex justify-end gap-3">
+              <button className="text-[#888] hover:text-white text-xs">Original</button>
+              <button className="text-[#888] hover:text-white">⛶</button>
             </div>
           </div>
         </main>
 
         {/* Right Inspector */}
-        <aside className="w-72 border-l border-white/10 bg-neutral-900/50 flex flex-col z-10 backdrop-blur-sm">
-          <div className="p-4 border-b border-white/5">
-            <h2 className="text-sm font-medium text-white">Properties</h2>
+        <aside className="w-[340px] border-l border-[#252525] bg-[#181818] flex flex-col z-10">
+          <div className="px-4 border-b border-[#252525] flex gap-4">
+            {['Video', 'Audio', 'Speed', 'Animation', 'Adjustment'].map((tab, i) => (
+              <button key={tab} className={`py-3 text-xs font-medium ${i === 0 ? 'text-white border-b-2 border-blue-500' : 'text-[#888] hover:text-white'}`}>
+                {tab}
+              </button>
+            ))}
           </div>
           <div className="p-4 flex-1 overflow-y-auto space-y-6">
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">Transform</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-neutral-950 border border-white/5 rounded-md px-3 py-1.5 flex items-center justify-between">
-                  <span className="text-xs text-neutral-500">X</span>
-                  <span className="text-sm text-neutral-200">0.0</span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-white">Basic</h3>
+                <button className="text-[#888] text-xs hover:text-white">Reset</button>
+              </div>
+              <div className="space-y-4 pl-2">
+                <div>
+                  <h4 className="text-xs text-[#888] mb-2">Position & Size</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-[#2A2A2A] border border-[#3A3A3A] rounded flex items-center justify-between px-2 py-1.5">
+                      <span className="text-xs text-[#888]">X</span>
+                      <input type="text" className="bg-transparent text-right w-16 outline-none text-xs text-white" defaultValue="0.0" />
+                    </div>
+                    <div className="bg-[#2A2A2A] border border-[#3A3A3A] rounded flex items-center justify-between px-2 py-1.5">
+                      <span className="text-xs text-[#888]">Y</span>
+                      <input type="text" className="bg-transparent text-right w-16 outline-none text-xs text-white" defaultValue="0.0" />
+                    </div>
+                    <div className="bg-[#2A2A2A] border border-[#3A3A3A] rounded flex items-center justify-between px-2 py-1.5 col-span-2">
+                      <span className="text-xs text-[#888]">Scale</span>
+                      <div className="flex items-center gap-2 flex-1 ml-2">
+                        <input type="range" className="flex-1 h-1 bg-[#444] rounded-full appearance-none cursor-pointer" />
+                        <input type="text" className="bg-transparent text-right w-12 outline-none text-xs text-white" defaultValue="100%" />
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-neutral-950 border border-white/5 rounded-md px-3 py-1.5 flex items-center justify-between">
-                  <span className="text-xs text-neutral-500">Y</span>
-                  <span className="text-sm text-neutral-200">0.0</span>
-                </div>
-                <div className="bg-neutral-950 border border-white/5 rounded-md px-3 py-1.5 flex items-center justify-between col-span-2">
-                  <span className="text-xs text-neutral-500">Scale</span>
-                  <span className="text-sm text-neutral-200">100%</span>
+                <div>
+                  <h4 className="text-xs text-[#888] mb-2">Blend</h4>
+                  <div className="bg-[#2A2A2A] border border-[#3A3A3A] rounded px-3 py-1.5 flex items-center justify-between">
+                    <span className="text-xs text-white">Normal</span>
+                    <span className="text-[#888] text-xs">▼</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-3">
+                    <span className="text-xs text-[#888] w-12">Opacity</span>
+                    <input type="range" className="flex-1 h-1 bg-[#444] rounded-full appearance-none cursor-pointer" />
+                    <span className="text-xs text-white w-8 text-right">100%</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -471,48 +534,64 @@ function Home() {
       </div>
 
       {/* Bottom Timeline */}
-      <div className="h-72 border-t border-white/10 bg-neutral-950 flex flex-col z-20">
-        <div className="h-8 border-b border-white/5 flex">
+      <div className="h-[40%] border-t border-[#252525] bg-[#181818] flex flex-col z-20">
+        {/* Timeline Toolbar */}
+        <div className="h-10 border-b border-[#252525] bg-[#1A1A1A] flex items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <button className="w-8 h-8 flex items-center justify-center text-[#888] hover:text-white rounded hover:bg-[#2A2A2A]"><span title="Undo">↩</span></button>
+            <button className="w-8 h-8 flex items-center justify-center text-[#888] hover:text-white rounded hover:bg-[#2A2A2A]"><span title="Redo">↪</span></button>
+            <div className="w-px h-4 bg-[#333] mx-1"></div>
+            <button className="w-8 h-8 flex items-center justify-center text-[#888] hover:text-white rounded hover:bg-[#2A2A2A]"><span title="Split">✂</span></button>
+            <button className="w-8 h-8 flex items-center justify-center text-[#888] hover:text-white rounded hover:bg-[#2A2A2A]"><span title="Delete">🗑</span></button>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[#888] text-xs">Zoom</span>
+              <input type="range" className="w-24 h-1 bg-[#444] rounded-full appearance-none cursor-pointer" />
+            </div>
+          </div>
+        </div>
+
+        <div className="h-6 border-b border-[#252525] flex bg-[#141414]">
           {/* Track Headers Area */}
-          <div className="w-72 border-r border-white/5 bg-neutral-900/30 flex items-center px-4">
-            <span className="text-xs font-medium text-neutral-400">Tracks</span>
+          <div className="w-[180px] border-r border-[#252525] flex items-center px-4">
           </div>
           {/* Ruler */}
-          <div className="flex-1 bg-neutral-900/20 relative overflow-hidden">
+          <div className="flex-1 relative overflow-hidden">
             {/* Playhead indicator top */}
             <div 
-              className="absolute top-0 bottom-0 w-px bg-red-500 z-10"
+              className="absolute top-0 bottom-0 w-px bg-white z-10"
               style={{ left: `${(currentTime / 60) * 100}%` }}
             >
-              <div className="absolute top-0 -left-1.5 w-3 h-3 bg-red-500 rounded-sm"></div>
+              <div className="absolute top-0 -left-1.5 w-3 h-2 bg-white rounded-sm"></div>
             </div>
             {/* Ruler ticks */}
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMTAwJSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxNCIgeD0iMCIgeT0iMTgiIGZpbGw9IiM1MjUyNTIiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSI4IiB4PSIxMCIgeT0iMjQiIGZpbGw9IiMzZjNmNGYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSI4IiB4PSIyMCIgeT0iMjQiIGZpbGw9IiMzZjNmNGYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSI4IiB4PSIzMCIgeT0iMjQiIGZpbGw9IiMzZjNmNGYiLz48L3N2Zz4=')] opacity-50"></div>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMTAwJSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSI4IiB4PSIwIiB5PSIxNiIgZmlsbD0iIzQ0NCIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjQiIHg9IjEwIiB5PSIyMCIgZmlsbD0iIzMzMyIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjQiIHg9IjIwIiB5PSIyMCIgZmlsbD0iIzMzMyIvPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjQiIHg9IjMwIiB5PSIyMCIgZmlsbD0iIzMzMyIvPjwvc3ZnPg==')] opacity-50"></div>
           </div>
         </div>
 
         {/* Tracks */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="flex-1 overflow-y-auto flex flex-col bg-[#111]">
           {projectState?.tracks.map((track: any) => (
-            <div key={track.id} className="h-20 border-b border-white/5 flex group">
-              <div className="w-72 border-r border-white/5 bg-neutral-900/30 p-2 flex items-center justify-between group-hover:bg-neutral-900/50 transition-colors">
-                <span className="text-xs font-medium text-neutral-300">{track.name}</span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div key={track.id} className="min-h-[60px] border-b border-[#252525] flex group">
+              <div className="w-[180px] border-r border-[#252525] bg-[#181818] p-2 flex flex-col justify-center">
+                <span className="text-xs text-[#E4E4E4] mb-1">{track.name}</span>
+                <div className="flex gap-2">
                   <button 
                     onClick={() => handleAddClip(track.id)}
-                    className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-neutral-400 hover:text-indigo-400 text-xs"
+                    className="text-[#888] hover:text-white text-[10px]"
                     title="Add Clip"
                   >
-                    +
+                    + Add
                   </button>
-                  <button className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-neutral-400 text-xs">M</button>
-                  <button className="w-6 h-6 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center text-neutral-400 text-xs">S</button>
+                  <button className="text-[#888] hover:text-white text-[10px]" title="Mute">🔈</button>
+                  <button className="text-[#888] hover:text-white text-[10px]" title="Hide">👁</button>
                 </div>
               </div>
-              <div className="flex-1 relative bg-neutral-950/50 overflow-hidden">
+              <div className="flex-1 relative overflow-hidden">
                  {/* Playhead line continuing through tracks */}
                 <div 
-                  className="absolute top-0 bottom-0 w-px bg-red-500/50 pointer-events-none z-10"
+                  className="absolute top-0 bottom-0 w-px bg-white/50 pointer-events-none z-10"
                   style={{ left: `${(currentTime / 60) * 100}%` }}
                 ></div>
                 
@@ -520,13 +599,13 @@ function Home() {
                 {track.clips?.map((clip: any) => (
                   <div 
                     key={clip.id}
-                    className="absolute top-2 bottom-2 bg-indigo-500/20 border border-indigo-500/50 rounded-md flex items-center px-2 cursor-pointer hover:bg-indigo-500/30 transition-colors"
+                    className="absolute top-2 bottom-2 bg-[#2E3C56] border border-[#4B6899] rounded flex items-center px-2 cursor-pointer hover:bg-[#384A6A] transition-colors"
                     style={{ 
                       left: `${(clip.start_time / 60) * 100}%`, 
                       width: `${(clip.duration / 60) * 100}%` 
                     }}
                   >
-                    <span className="text-[10px] text-indigo-200 truncate">{clip.name}</span>
+                    <span className="text-[10px] text-white truncate">{clip.name}</span>
                   </div>
                 ))}
               </div>
@@ -540,7 +619,7 @@ function Home() {
                   <span className="text-red-300 font-mono text-xs max-w-lg text-center break-words">{errorMsg}</span>
                 </>
               ) : (
-                <span className="text-neutral-600">Loading engine...</span>
+                <span className="text-[#888]">Loading engine...</span>
               )}
             </div>
           )}
