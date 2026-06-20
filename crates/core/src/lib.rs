@@ -80,3 +80,36 @@ impl Project {
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_delete_existing_clip() {
+        let mut project = Project::new("Test Project");
+        let track_id = project.add_track("Track 1");
+        let clip_id = project.add_clip(&track_id, "Clip 1", 0.0, 10.0).unwrap();
+
+        assert_eq!(project.tracks[0].clips.len(), 1);
+
+        let result = project.delete_clip(&clip_id);
+
+        assert!(result);
+        assert_eq!(project.tracks[0].clips.len(), 0);
+    }
+
+    #[test]
+    fn test_delete_non_existent_clip() {
+        let mut project = Project::new("Test Project");
+        let track_id = project.add_track("Track 1");
+        project.add_clip(&track_id, "Clip 1", 0.0, 10.0).unwrap();
+
+        assert_eq!(project.tracks[0].clips.len(), 1);
+
+        let result = project.delete_clip("non-existent-id");
+
+        assert!(!result);
+        assert_eq!(project.tracks[0].clips.len(), 1);
+    }
+}
