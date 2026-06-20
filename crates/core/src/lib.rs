@@ -80,3 +80,18 @@ impl Project {
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_project_new() {
+        let name = "Test Project";
+        let project = Project::new(name);
+
+        assert!(!project.id.is_empty(), "Project ID should not be empty");
+        assert_eq!(project.name, name, "Project name should match the input");
+        assert!(project.tracks.is_empty(), "Project should initialize with empty tracks");
+    }
+}
