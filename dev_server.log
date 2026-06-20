@@ -1,0 +1,26 @@
+$ turbo dev
+• turbo 2.9.9
+
+   • Packages in scope: @opencut/web
+   • Running dev in 1 packages
+   • Remote caching disabled
+
+@opencut/web:dev: cache bypass, force executing 218c1003ba7ad9f8
+@opencut/web:dev: $ vite dev --port 5173
+@opencut/web:dev: (node:436459) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+@opencut/web:dev: (Use `node --trace-deprecation ...` to show where the warning was created)
+@opencut/web:dev: 12:02:53 PM [vite] (ssr) Re-optimizing dependencies because lockfile has changed
+@opencut/web:dev: 12:02:54 PM [vite] (ssr) [optimizer] bundling dependencies...
+@opencut/web:dev: 12:02:58 PM [vite] (client) Re-optimizing dependencies because lockfile has changed
+@opencut/web:dev:
+@opencut/web:dev:   VITE v8.0.10  ready in 9863 ms
+@opencut/web:dev:
+@opencut/web:dev:   ➜  Local:   http://localhost:5173/
+@opencut/web:dev:   ➜  Network: use --host to expose
+@opencut/web:dev:   ➜  Debug:   http://localhost:5173/__debug
+@opencut/web:dev: [Client] {
+@opencut/web:dev:   name: 'SyntaxError',
+@opencut/web:dev:   message: "Failed to execute 'json' on 'Response': Unexpected end of JSON input",
+@opencut/web:dev:   stack: 'SyntaxError: Unexpected end of JSON input\n' +
+@opencut/web:dev:     '    at http://localhost:5173/src/routes/editor.$projectId.tsx?tsr-split=component:85:99'
+@opencut/web:dev: }
