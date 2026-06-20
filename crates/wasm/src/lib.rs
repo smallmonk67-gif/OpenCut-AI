@@ -17,8 +17,8 @@ impl WasmProject {
     }
 
     #[wasm_bindgen]
-    pub fn get_state(&self) -> JsValue {
-        to_value(&self.inner).unwrap()
+    pub fn get_state(&self) -> Result<JsValue, JsValue> {
+        to_value(&self.inner).map_err(|e| e.into())
     }
 
     #[wasm_bindgen]
