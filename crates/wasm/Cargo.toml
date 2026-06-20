@@ -10,3 +10,4 @@ crate-type = ["cdylib", "rlib"]
 wasm-bindgen = "0.2"
 opencut-core = { path = "../core" }
 serde-wasm-bindgen = "0.6"
+fontdb = "0.23.0"
