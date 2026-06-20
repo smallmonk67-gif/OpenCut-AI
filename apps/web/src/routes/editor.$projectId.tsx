@@ -400,7 +400,6 @@ function Home() {
             <input
               type="file"
               multiple
-              // @ts-ignore
               webkitdirectory="true"
               directory="true"
               ref={folderInputRef}
