@@ -420,6 +420,8 @@ function Home() {
               >
                 + Import Folder
               </button>
+            </div>
+          </div>
 
           {/* Active Panel Area */}
           <div className="flex-1 flex flex-col">
@@ -609,14 +611,13 @@ function Home() {
                 {track.clips?.map((clip: any) => (
                   <div 
                     key={clip.id}
-                    className="absolute top-2 bottom-2 bg-indigo-500/20 border border-indigo-500/50 rounded-md flex items-center px-2 cursor-pointer hover:bg-indigo-500/30 transition-colors group/clip"
-                    className="absolute top-2 bottom-2 bg-[#2E3C56] border border-[#4B6899] rounded flex items-center px-2 cursor-pointer hover:bg-[#384A6A] transition-colors"
+                    className="absolute top-2 bottom-2 bg-[#2E3C56] border border-[#4B6899] rounded flex items-center px-2 cursor-pointer hover:bg-[#384A6A] transition-colors group/clip"
                     style={{ 
                       left: `${(clip.start_time / 60) * 100}%`, 
                       width: `${(clip.duration / 60) * 100}%` 
                     }}
                   >
-                    <span className="text-[10px] text-indigo-200 truncate flex-1">{clip.name}</span>
+                    <span className="text-[10px] text-white truncate flex-1">{clip.name}</span>
                     <div className="flex gap-1 opacity-0 group-hover/clip:opacity-100 transition-opacity ml-1">
                       <button
                         onClick={(e) => {
@@ -639,7 +640,6 @@ function Home() {
                         ×
                       </button>
                     </div>
-                    <span className="text-[10px] text-white truncate">{clip.name}</span>
                   </div>
                 ))}
               </div>
