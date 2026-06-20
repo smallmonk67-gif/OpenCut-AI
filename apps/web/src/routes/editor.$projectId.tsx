@@ -29,6 +29,10 @@ function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
 
+  const [activeTab, setActiveTab] = useState('Media');
+  const [fonts, setFonts] = useState<string[]>([]);
+  const [audioTracks, setAudioTracks] = useState<any[]>([]);
+  const [projectName, setProjectName] = useState<string>("My Awesome Edit");
 
   useEffect(() => {
     // Dynamic import to avoid SSR issues or pre-compilation errors
@@ -41,16 +45,55 @@ function Home() {
       // Initialize the WebAssembly module
       await init();
       
-      const proj = new WasmProject("Project " + projectId.substring(0, 8));
+      // Load project name from local storage if exists
+      let pName = "Project " + projectId.substring(0, 8);
+      try {
+        const saved = localStorage.getItem('opencut_projects');
+        if (saved) {
+          const projects = JSON.parse(saved);
+          const found = projects.find((p: any) => p.id === projectId);
+          if (found) {
+            pName = found.name;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      setProjectName(pName);
+
+      const proj = new WasmProject(pName);
       proj.add_track("Video Track 1");
       proj.add_track("Audio Track 1");
       setWasmProj(proj);
       setProjectState(proj.get_state());
+
+      try {
+        // Fix: Use WasmProject.get_fonts()
+        const loadedFonts = WasmProject.get_fonts();
+        if (loadedFonts && Array.isArray(loadedFonts)) {
+           setFonts(loadedFonts);
+        }
+      } catch (err) {
+        console.error("Failed to load fonts from WASM:", err);
+      }
     }).catch(err => {
       console.error(err);
       setErrorMsg(err.toString() + " | " + err.message);
     });
   }, [projectId]);
+
+  useEffect(() => {
+    if (activeTab === 'Audio' && audioTracks.length === 0) {
+      fetch('https://www.theaudiodb.com/api/v1/json/2/searchtrack.php?s=coldplay')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.track) {
+            setAudioTracks(data.track);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [activeTab]);
 
   // Basic timeline playback
   useEffect(() => {
@@ -134,15 +177,20 @@ function Home() {
     const items = e.dataTransfer.items;
     if (!items) return;
 
-
     const incomingNodes: AssetNode[] = [];
+    // Collect promises to wait for all file tree traversals simultaneously
+    const promises: Promise<AssetNode | null>[] = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i].webkitGetAsEntry();
       if (item) {
-        const node = await traverseFileTree(item);
-        if (node) {
-          incomingNodes.push(node);
-        }
+        promises.push(traverseFileTree(item));
+      }
+    }
+
+    const results = await Promise.all(promises);
+    for (const node of results) {
+      if (node) {
+        incomingNodes.push(node);
       }
     }
 
@@ -183,14 +231,15 @@ function Home() {
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
     const buildTree = (files: File[]) => {
       const root: AssetNode[] = [];
 
       files.forEach(file => {
+        // use webkitRelativePath for folder structure, else fallback to name
         const path = file.webkitRelativePath || file.name;
-        const parts = path.split('/');
+        const parts = path.split('/').filter(Boolean); // handle potential leading/trailing slashes
 
         let currentLevel = root;
         let currentPath = '';
@@ -201,6 +250,7 @@ function Home() {
 
           const isFile = i === parts.length - 1;
 
+          // Find if we already mapped this part
           let existingNode = currentLevel.find(n => n.name === part && n.type === (isFile ? 'file' : 'directory'));
 
           if (!existingNode) {
@@ -228,7 +278,7 @@ function Home() {
 
     setAssets(mergedAssets);
 
-    // Reset input
+    // Reset inputs
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -349,7 +399,7 @@ function Home() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-neutral-400 border border-white/10 px-3 py-1 rounded-full cursor-pointer hover:bg-white/5 transition-colors">My Awesome Edit</span>
+          <span className="text-sm text-neutral-400 border border-white/10 px-3 py-1 rounded-full cursor-pointer hover:bg-white/5 transition-colors">{projectName}</span>
           <button className="px-4 py-1.5 text-sm font-medium rounded-md text-neutral-300 hover:bg-white/10 transition-colors">Import</button>
           <button className="px-4 py-1.5 text-sm font-medium rounded-md bg-purple-600 hover:bg-purple-500 text-white transition-all shadow-lg shadow-purple-600/20">Export</button>
         </div>
@@ -370,8 +420,12 @@ function Home() {
               { icon: 'T', label: 'Transitions' },
               { icon: 'F', label: 'Filters' },
               { icon: 'A', label: 'Adjustment' },
-            ].map((tab, i) => (
-              <button key={tab.label} className={`flex flex-col items-center justify-center w-14 h-14 rounded-md transition-colors ${i === 0 ? 'text-white bg-[#252525]' : 'text-[#888] hover:text-white hover:bg-[#252525]'}`}>
+            ].map((tab) => (
+              <button
+                key={tab.label}
+                onClick={() => setActiveTab(tab.label)}
+                className={`flex flex-col items-center justify-center w-14 h-14 rounded-md transition-colors ${activeTab === tab.label ? 'text-white bg-[#252525]' : 'text-[#888] hover:text-white hover:bg-[#252525]'}`}
+              >
                 <span className="text-lg mb-1 font-bold">{tab.icon}</span>
                 <span className="text-[10px]">{tab.label}</span>
               </button>
@@ -382,69 +436,107 @@ function Home() {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
           >
-            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
-            <div className="flex flex-col gap-0.5">
-              {assets.length === 0 ? (
-                <div className="text-xs text-neutral-600 text-center py-4">No media imported yet.</div>
-              ) : (
-                assets.map(node => renderAssetNode(node))
-              )}
-            </div>
-            <input
-              type="file"
-              multiple
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileInput}
-            />
-            <input
-              type="file"
-              multiple
-              // @ts-ignore
-              webkitdirectory="true"
-              directory="true"
-              ref={folderInputRef}
-              className="hidden"
-              onChange={handleFileInput}
-            />
-            <div className="flex gap-2 w-full mt-4">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
-              >
-                + Import Files
-              </button>
-              <button
-                onClick={() => folderInputRef.current?.click()}
-                className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
-              >
-                + Import Folder
-              </button>
-            </div>
-          </div>
+            {activeTab === 'Media' && (
+              <>
+                <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
+                <div className="flex flex-col gap-0.5">
+                  {assets.length === 0 ? (
+                    <div className="text-xs text-neutral-600 text-center py-4">No media imported yet.</div>
+                  ) : (
+                    assets.map(node => renderAssetNode(node))
+                  )}
+                </div>
+                <input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileInput}
+                />
+                <input
+                  type="file"
+                  multiple
+                  // @ts-ignore
+                  webkitdirectory="true"
+                  directory="true"
+                  ref={folderInputRef}
+                  className="hidden"
+                  onChange={handleFileInput}
+                />
+                <div className="flex gap-2 w-full mt-4">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
+                  >
+                    + Import Files
+                  </button>
+                  <button
+                    onClick={() => folderInputRef.current?.click()}
+                    className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
+                  >
+                    + Import Folder
+                  </button>
+                </div>
+              </>
+            )}
 
-          {/* Active Panel Area */}
-          <div className="flex-1 flex flex-col">
-            <div className="p-4 border-b border-[#252525]">
-              <div className="flex gap-4">
-                <button className="text-white font-medium text-sm pb-2 border-b-2 border-blue-500">Local</button>
-                <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
+            {activeTab === 'Audio' && (
+              <div>
+                <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Audio Library</h3>
+                <div className="flex flex-col gap-2">
+                  {audioTracks.length === 0 ? (
+                    <div className="text-xs text-neutral-600 text-center py-4">Loading tracks...</div>
+                  ) : (
+                    audioTracks.slice(0, 10).map((track: any) => (
+                       <div key={track.idTrack} className="flex flex-col p-2 bg-[#252525] rounded-md hover:bg-[#333] cursor-pointer">
+                          <span className="text-xs text-white truncate">{track.strTrack}</span>
+                          <span className="text-[10px] text-neutral-400">{track.strArtist}</span>
+                       </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="flex-1 p-4 overflow-y-auto">
-              <button className="w-full bg-[#2A2A2A] hover:bg-[#333] border border-[#3A3A3A] text-white text-sm py-2 rounded mb-4 transition-colors">
-                Import
-              </button>
-              <div className="grid grid-cols-2 gap-2">
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} className="aspect-video bg-[#222] rounded border border-[#333] hover:border-[#666] transition-colors cursor-pointer group relative overflow-hidden flex items-center justify-center">
-                    <span className="text-[#555] text-xs">Video {i}</span>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <span className="absolute bottom-1 left-2 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">Clip {i}</span>
-                  </div>
-                ))}
+            )}
+
+            {activeTab === 'Text' && (
+              <div>
+                <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">System Fonts</h3>
+                <div className="flex flex-col gap-2">
+                  <button className="w-full bg-[#252525] hover:bg-[#333] text-white text-xs py-2 rounded-md mb-2">
+                    + Add Default Text
+                  </button>
+                  {fonts.length === 0 ? (
+                    <div className="text-xs text-neutral-600 text-center py-4">Loading fonts...</div>
+                  ) : (
+                    fonts.slice(0, 20).map((font, idx) => (
+                      <div key={idx} className="px-3 py-2 bg-[#1A1A1A] border border-[#252525] rounded-md text-xs text-neutral-300 truncate cursor-pointer hover:bg-[#2A2A2A]">
+                        {font}
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {activeTab === 'Stickers' && (
+              <div>
+                <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Trending Stickers</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                    <div key={i} className="aspect-square bg-[#252525] rounded-md flex items-center justify-center text-2xl hover:bg-[#333] cursor-pointer">
+                      {['😊', '🚀', '🔥', '✨', '🎉', '💡', '❤️', '👍', '⭐'][i - 1]}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-xs text-neutral-500 text-center mt-4">Powered by stipop.io</div>
+              </div>
+            )}
+
+            {!['Media', 'Audio', 'Text', 'Stickers'].includes(activeTab) && (
+              <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                <span className="text-[#888] text-sm">{activeTab} features coming soon</span>
+              </div>
+            )}
           </div>
         </aside>
 
