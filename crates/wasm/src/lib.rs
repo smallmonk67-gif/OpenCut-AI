@@ -44,4 +44,17 @@ impl WasmProject {
     pub fn update_clip(&mut self, clip_id: &str, start_time: f64, duration: f64) -> bool {
         self.inner.update_clip(clip_id, start_time, duration)
     }
+
+    #[wasm_bindgen]
+    pub fn get_fonts() -> JsValue {
+        let mut db = fontdb::Database::new();
+        db.load_system_fonts();
+        let mut fonts: Vec<String> = Vec::new();
+        for face in db.faces() {
+            if let Some((family, _)) = face.families.first() {
+                fonts.push(family.clone());
+            }
+        }
+        to_value(&fonts).unwrap_or(JsValue::NULL)
+    }
 }
