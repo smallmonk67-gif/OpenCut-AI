@@ -58,4 +58,25 @@ impl Project {
             None
         }
     }
+
+    pub fn delete_clip(&mut self, clip_id: &str) -> bool {
+        for track in &mut self.tracks {
+            if let Some(idx) = track.clips.iter().position(|c| c.id == clip_id) {
+                track.clips.remove(idx);
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn update_clip(&mut self, clip_id: &str, start_time: f64, duration: f64) -> bool {
+        for track in &mut self.tracks {
+            if let Some(clip) = track.clips.iter_mut().find(|c| c.id == clip_id) {
+                clip.start_time = start_time;
+                clip.duration = duration;
+                return true;
+            }
+        }
+        false
+    }
 }

@@ -34,4 +34,14 @@ impl WasmProject {
             JsValue::NULL
         }
     }
+
+    #[wasm_bindgen]
+    pub fn delete_clip(&mut self, clip_id: &str) -> bool {
+        self.inner.delete_clip(clip_id)
+    }
+
+    #[wasm_bindgen]
+    pub fn update_clip(&mut self, clip_id: &str, start_time: f64, duration: f64) -> bool {
+        self.inner.update_clip(clip_id, start_time, duration)
+    }
 }

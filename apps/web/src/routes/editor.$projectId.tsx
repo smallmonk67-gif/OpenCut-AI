@@ -33,15 +33,13 @@ function Home() {
   useEffect(() => {
     // Dynamic import to avoid SSR issues or pre-compilation errors
     Promise.all([
-      import('opencut-wasm'),
-      import('opencut-wasm/opencut_wasm_bg.wasm?url')
-    ]).then(async ([module, wasmUrlModule]) => {
+      import('opencut-wasm')
+    ]).then(async ([module]) => {
       const init = module.default;
       const { WasmProject } = module;
-      const wasmUrl = wasmUrlModule.default;
       
-      // Initialize the WebAssembly module with the explicit URL
-      await init(wasmUrl);
+      // Initialize the WebAssembly module
+      await init();
       
       const proj = new WasmProject("Project " + projectId.substring(0, 8));
       proj.add_track("Video Track 1");
@@ -303,6 +301,18 @@ function Home() {
     if (!wasmProj) return;
     // Add a default clip of 5 seconds
     wasmProj.add_clip(trackId, "New Clip", currentTime, 5.0);
+    setProjectState(wasmProj.get_state());
+  };
+
+  const handleDeleteClip = (clipId: string) => {
+    if (!wasmProj) return;
+    wasmProj.delete_clip(clipId);
+    setProjectState(wasmProj.get_state());
+  };
+
+  const handleUpdateClip = (clipId: string, startTime: number, duration: number) => {
+    if (!wasmProj) return;
+    wasmProj.update_clip(clipId, startTime, duration);
     setProjectState(wasmProj.get_state());
   };
 
@@ -599,12 +609,36 @@ function Home() {
                 {track.clips?.map((clip: any) => (
                   <div 
                     key={clip.id}
+                    className="absolute top-2 bottom-2 bg-indigo-500/20 border border-indigo-500/50 rounded-md flex items-center px-2 cursor-pointer hover:bg-indigo-500/30 transition-colors group/clip"
                     className="absolute top-2 bottom-2 bg-[#2E3C56] border border-[#4B6899] rounded flex items-center px-2 cursor-pointer hover:bg-[#384A6A] transition-colors"
                     style={{ 
                       left: `${(clip.start_time / 60) * 100}%`, 
                       width: `${(clip.duration / 60) * 100}%` 
                     }}
                   >
+                    <span className="text-[10px] text-indigo-200 truncate flex-1">{clip.name}</span>
+                    <div className="flex gap-1 opacity-0 group-hover/clip:opacity-100 transition-opacity ml-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUpdateClip(clip.id, clip.start_time + 1.0, clip.duration);
+                        }}
+                        className="w-4 h-4 rounded bg-white/10 hover:bg-white/20 flex items-center justify-center text-white text-[8px]"
+                        title="Move Right (+1s)"
+                      >
+                        →
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClip(clip.id);
+                        }}
+                        className="w-4 h-4 rounded bg-red-500/50 hover:bg-red-500/80 flex items-center justify-center text-white text-[8px]"
+                        title="Delete Clip"
+                      >
+                        ×
+                      </button>
+                    </div>
                     <span className="text-[10px] text-white truncate">{clip.name}</span>
                   </div>
                 ))}
