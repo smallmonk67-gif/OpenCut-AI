@@ -482,8 +482,10 @@ function Home() {
               <div className="flex gap-4">
                 <button className="text-white font-medium text-sm pb-2 border-b-2 border-blue-500">Local</button>
                 <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
+              </div>
+            </div>
             {activeTab === 'Media' && (
-              <>
+              <div className="p-4 overflow-y-auto">
                 <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
                 <div className="flex flex-col gap-0.5">
                   {assets.length === 0 ? (
@@ -523,7 +525,7 @@ function Home() {
                     + Import Folder
                   </button>
                 </div>
-              </>
+              </div>
             )}
 
             {activeTab === 'Audio' && (
