@@ -47,14 +47,19 @@ impl WasmProject {
 
     #[wasm_bindgen]
     pub fn get_fonts() -> JsValue {
-        let mut db = fontdb::Database::new();
-        db.load_system_fonts();
-        let mut fonts: Vec<String> = Vec::new();
-        for face in db.faces() {
-            if let Some((family, _)) = face.families.first() {
-                fonts.push(family.clone());
-            }
-        }
+        // In the WebAssembly environment, the host OS's filesystem cannot be accessed.
+        // Therefore, system-level functions like fontdb::Database::load_system_fonts() will hang/fail.
+        // Return a hardcoded list of standard web fonts to ensure instant loading.
+        let fonts = vec![
+            "Arial".to_string(),
+            "Courier New".to_string(),
+            "Georgia".to_string(),
+            "Times New Roman".to_string(),
+            "Verdana".to_string(),
+            "Trebuchet MS".to_string(),
+            "Impact".to_string(),
+            "Comic Sans MS".to_string(),
+        ];
         to_value(&fonts).unwrap_or(JsValue::NULL)
     }
 }
