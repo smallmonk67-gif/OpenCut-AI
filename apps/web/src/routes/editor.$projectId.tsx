@@ -482,6 +482,9 @@ function Home() {
               <div className="flex gap-4">
                 <button className="text-white font-medium text-sm pb-2 border-b-2 border-blue-500">Local</button>
                 <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
+              </div>
+            </div>
+            <div className="p-4 flex-1 overflow-y-auto">
             {activeTab === 'Media' && (
               <>
                 <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
@@ -583,6 +586,7 @@ function Home() {
                 <span className="text-[#888] text-sm">{activeTab} features coming soon</span>
               </div>
             )}
+            </div>
           </div>
         </aside>
 
