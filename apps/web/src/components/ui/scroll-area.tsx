@@ -1,4 +1,5 @@
-import * as React from "react"
+
+// @ts-ignore
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area"
 
 import { cn } from "#/lib/utils.ts"
