@@ -444,52 +444,10 @@ function Home() {
               </button>
             ))}
           </div>
-          <div
-            className="flex-1 p-4 overflow-y-auto"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
-            <div className="flex flex-col gap-0.5">
-              {assets.length === 0 ? (
-                <div className="text-xs text-neutral-600 text-center py-4">No media imported yet.</div>
-              ) : (
-                assets.map(node => renderAssetNode(node))
-              )}
-            </div>
-            <input
-              type="file"
-              multiple
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleFileInput}
-            />
-            <input
-              type="file"
-              multiple
-              webkitdirectory=""
-              directory=""
-              ref={folderInputRef}
-              className="hidden"
-              onChange={handleFileInput}
-            />
-            <div className="flex gap-2 w-full mt-4">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
-              >
-                + Import Files
-              </button>
-              <button
-                onClick={() => folderInputRef.current?.click()}
-                className="flex-1 py-2 rounded-md border border-dashed border-white/20 text-neutral-400 text-xs hover:border-purple-500/50 hover:text-purple-400 transition-colors"
-              >
-                + Import Folder
-              </button>
-            </div>
-          </div>
 
-          {/* Active Panel Area */}
+
+        {/* Left Side Active Panel Area */}
+        <aside className="w-[340px] border-r border-[#252525] bg-[#181818] flex flex-col z-10">
           <div className="flex-1 flex flex-col">
             <div className="p-4 border-b border-[#252525]">
               <div className="flex gap-4">
@@ -497,7 +455,6 @@ function Home() {
                 <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
               </div>
             </div>
-            <div className="flex-1 p-4 overflow-y-auto">
             {activeTab === 'Media' && (
               <>
                 <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
