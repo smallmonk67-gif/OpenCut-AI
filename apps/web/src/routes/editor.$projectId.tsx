@@ -441,6 +441,7 @@ function Home() {
                 <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
               </div>
             </div>
+            <div className="p-4 flex-1 overflow-y-auto">
             <div className="flex-1 p-4 overflow-y-auto" onDragOver={handleDragOver} onDrop={handleDrop}>
             {activeTab === 'Media' && (
               <>
