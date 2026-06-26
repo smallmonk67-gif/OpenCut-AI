@@ -84,14 +84,14 @@ function Home() {
 
   useEffect(() => {
     if (activeTab === 'Audio' && audioTracks.length === 0) {
-      fetch('https://www.theaudiodb.com/api/v1/json/2/searchtrack.php?s=coldplay')
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.track) {
-            setAudioTracks(data.track);
-          }
-        })
-        .catch(console.error);
+      // Use mock data to ensure instant loading without relying on external API
+      setAudioTracks([
+        { idTrack: "1", strTrack: "Adventure Beats", strArtist: "OpenCut Sounds" },
+        { idTrack: "2", strTrack: "Cinematic Intro", strArtist: "OpenCut Sounds" },
+        { idTrack: "3", strTrack: "Vlog Background Music", strArtist: "OpenCut Sounds" },
+        { idTrack: "4", strTrack: "Lofi Chillhop", strArtist: "OpenCut Sounds" },
+        { idTrack: "5", strTrack: "Upbeat Corporate", strArtist: "OpenCut Sounds" },
+      ]);
     }
   }, [activeTab]);
 
@@ -332,25 +332,38 @@ function Home() {
     return (
       <div
         key={node.path}
-        className="flex items-center py-1 px-2 hover:bg-white/5 rounded-md cursor-pointer transition-colors group"
+        className="flex items-center py-1 px-2 hover:bg-white/5 rounded-md cursor-pointer transition-colors group justify-between"
         style={{ paddingLeft: `${(depth * 12) + 24}px` }}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2 text-neutral-500 group-hover:text-purple-400">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        <span className="text-xs text-neutral-300 truncate">{node.name}</span>
+        <div className="flex items-center truncate">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mr-2 text-neutral-500 group-hover:text-purple-400 min-w-[12px]">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <span className="text-xs text-neutral-300 truncate">{node.name}</span>
+        </div>
+        <button
+          onClick={() => {
+            if (!projectState || !projectState.tracks || projectState.tracks.length === 0) return;
+            const trackId = projectState.tracks[0].id;
+            handleAddClip(trackId, node.name);
+          }}
+          className="opacity-0 group-hover:opacity-100 text-[#888] hover:text-white px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 text-[10px] ml-2"
+          title="Add to timeline"
+        >
+          +
+        </button>
       </div>
     );
   };
 
-  const handleAddClip = (trackId: string) => {
+  const handleAddClip = (trackId: string, clipName: string = "New Clip") => {
     if (!wasmProj) return;
     // Add a default clip of 5 seconds
-    wasmProj.add_clip(trackId, "New Clip", currentTime, 5.0);
+    wasmProj.add_clip(trackId, clipName, currentTime, 5.0);
     setProjectState(wasmProj.get_state());
   };
 
@@ -431,13 +444,19 @@ function Home() {
               </button>
             ))}
           </div>
-          <div
-            className="flex-1 p-4 overflow-y-auto"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
+
+
+        {/* Left Side Active Panel Area */}
+        <aside className="w-[340px] border-r border-[#252525] bg-[#181818] flex flex-col z-10">
+          <div className="flex-1 flex flex-col">
+            <div className="p-4 border-b border-[#252525]">
+              <div className="flex gap-4">
+                <button className="text-white font-medium text-sm pb-2 border-b-2 border-blue-500">Local</button>
+                <button className="text-[#888] hover:text-white font-medium text-sm pb-2">Library</button>
+              </div>
+            </div>
             {activeTab === 'Media' && (
-              <>
+              <div className="p-4 overflow-y-auto">
                 <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">Project Assets</h3>
                 <div className="flex flex-col gap-0.5">
                   {assets.length === 0 ? (
@@ -457,8 +476,8 @@ function Home() {
                   type="file"
                   multiple
                   // @ts-ignore
-                  webkitdirectory="true"
-                  directory="true"
+                  webkitdirectory=""
+                  directory=""
                   ref={folderInputRef}
                   className="hidden"
                   onChange={handleFileInput}
@@ -477,7 +496,7 @@ function Home() {
                     + Import Folder
                   </button>
                 </div>
-              </>
+              </div>
             )}
 
             {activeTab === 'Audio' && (
@@ -537,6 +556,7 @@ function Home() {
                 <span className="text-[#888] text-sm">{activeTab} features coming soon</span>
               </div>
             )}
+            </div>
           </div>
         </aside>
 
